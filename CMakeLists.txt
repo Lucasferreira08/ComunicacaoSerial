@@ -37,9 +37,7 @@ pico_sdk_init()
 
 add_executable(ComunicacaoSerial 
     ComunicacaoSerial.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/font/font.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/display/display.c
-)
+    ${CMAKE_CURRENT_LIST_DIR}/libs/display/display.c)
 
 pico_set_program_name(ComunicacaoSerial "ComunicacaoSerial")
 pico_set_program_version(ComunicacaoSerial "0.1")
@@ -55,14 +53,11 @@ target_link_libraries(ComunicacaoSerial
 # Add the standard include files to the build
 target_include_directories(ComunicacaoSerial PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/include
-)
+        ${CMAKE_CURRENT_LIST_DIR}/include)
 
 # Add any user requested libraries
 target_link_libraries(ComunicacaoSerial 
-        hardware_i2c
-        
-        )
+        hardware_i2c)
 
 pico_add_extra_outputs(ComunicacaoSerial)
 

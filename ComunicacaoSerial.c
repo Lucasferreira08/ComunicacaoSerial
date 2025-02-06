@@ -2,7 +2,6 @@
 #include "hardware/uart.h"
 #include "display.h"
 
-// Definições de pinos e endereçamento
 #define I2C_PORT i2c1       // Controlador I²C0 do RP2040
 #define SDA_PIN 14          // GPIO14 para SDA
 #define SCL_PIN 15          // GPIO15 para SCL
@@ -32,47 +31,66 @@ void setup_display()
     ssd1306_send_data(&ssd);
 }
 
+// int main()
+// {
+//     stdio_init_all(); // Inicializa stdio via USB/UART
+//     setup_i2c();
+//     setup_display();
+
+//     printf("Display ready! Type characters...\n");
+    
+//     while(true) {
+//         // Verifica entrada sem bloquear
+//         int c = getchar_timeout_us(0);
+        
+//         if(c != PICO_ERROR_TIMEOUT) {
+//             // Limpa display e exibe novo caractere
+//             ssd1306_fill(&ssd, false);
+//             ssd1306_draw_char(&ssd, (char)c, 0, 0);
+//             ssd1306_send_data(&ssd);
+            
+//             // Ecoa o caractere de volta (opcional)
+//             printf("Displayed: %c\n", c);
+//         }
+//         sleep_ms(10);
+//     }
+// }
+
 int main()
 {
-  //   stdio_init_all();
-
-  //   setup_i2c();
-
-  //   setup_display();
-
-  //   bool cor = true;
-  //   while (true)
-  //   {
-  //     cor = !cor;
-  //     // Atualiza o conteúdo do display com animações
-  //     ssd1306_fill(&ssd, !cor); // Limpa o display
-  //     ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
-  //     ssd1306_draw_string(&ssd, "CEPEDI   TIC37", 8, 10); // Desenha uma string
-  //     ssd1306_draw_string(&ssd, "EMBARCATECH", 20, 30); // Desenha uma string
-  //     ssd1306_draw_string(&ssd, "PROF WILTON", 15, 48); // Desenha uma string      
-  //     ssd1306_send_data(&ssd); // Atualiza o display
-
-  //     sleep_ms(1000);
-  // }
-
-    stdio_init_all(); // Inicializa stdio via USB/UART
+    stdio_init_all();
     setup_i2c();
     setup_display();
 
-    printf("Display ready! Type characters...\n");
+    uint8_t x = 0;
+    uint8_t y = 0;
+    
+    printf("Display pronto! Digite algo...\n");
     
     while(true) {
-        // Verifica entrada sem bloquear
         int c = getchar_timeout_us(0);
         
         if(c != PICO_ERROR_TIMEOUT) {
-            // Limpa display e exibe novo caractere
-            ssd1306_fill(&ssd, false);
-            ssd1306_draw_char(&ssd, (char)c, 0, 0);
+            // Desenha o novo caractere na posição atual
+            ssd1306_draw_char(&ssd, (char)c, x, y);
             ssd1306_send_data(&ssd);
             
-            // Ecoa o caractere de volta (opcional)
-            printf("Displayed: %c\n", c);
+            // Atualiza a posição para o próximo caractere
+            x += 8;
+            
+            // Quebra de linha
+            if(x + 8 >= ssd.width) {
+                x = 0;
+                y += 8;
+                
+                // Reset ao chegar no final do display
+                if(y + 8 >= ssd.height) {
+                    y = 0;
+                    ssd1306_fill(&ssd, false); // Limpa ao chegar no final
+                }
+            }
+            
+            printf("Displayed: %c em (%d,%d)\n", c, x, y);
         }
         sleep_ms(10);
     }
