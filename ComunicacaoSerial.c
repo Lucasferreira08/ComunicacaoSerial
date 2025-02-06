@@ -16,6 +16,8 @@
 #define OUT_PIN_BLUE 13 
 
 static volatile uint32_t last_time = 0; // Armazena o último tempo de interrupção
+static volatile uint8_t x = 0;
+static volatile uint8_t y = 0;
 
 // Variáveis para o PIO (Programmable I/O) e state machine (máquina de estados)
 PIO pio;
@@ -58,7 +60,9 @@ void gpio_irq_handler(uint gpio, uint32_t events)
             }
             gpio_put(OUT_PIN_BLUE, !gpio_get(OUT_PIN_BLUE));
         }
-
+        ssd1306_send_data(&ssd);
+        x=0;
+        y=0; 
         // Atualiza o último tempo de interrupção
         last_time = current_time;
     }
@@ -137,9 +141,6 @@ int main()
 
     pio = pio0;
     sm = pio_config(pio);
-
-    uint8_t x = 0;
-    uint8_t y = 0;
     
     printf("Display pronto! Digite algo...\n");
 
@@ -151,6 +152,12 @@ int main()
         if(c != PICO_ERROR_TIMEOUT) {
 
             absolute_time_t now = get_absolute_time();  // AQUI
+
+            if (!x && !y)
+            {
+                ssd1306_fill(&ssd, false);
+            }
+            
 
             // Aplica debounce temporal para evitar leituras muito próximas
             if(absolute_time_diff_us(last_char_time, now) > 50*1000) 
