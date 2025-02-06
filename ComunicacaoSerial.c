@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include "hardware/uart.h"
 #include "display.h"
+#include "matriz_led.h"
 
 #define I2C_PORT i2c1       // Controlador I²C0 do RP2040
 #define SDA_PIN 14          // GPIO14 para SDA
 #define SCL_PIN 15          // GPIO15 para SCL
 #define SSD1306_ADDR 0x3C   // Endereço I²C do display (alternativo: 0x3C)
+
+#define OUT_PIN 7
+
+// Variáveis para o PIO (Programmable I/O) e state machine (máquina de estados)
+PIO pio;
+uint sm;
 
 ssd1306_t ssd; // Inicializa a estrutura do display
 
@@ -31,11 +38,32 @@ void setup_display()
     ssd1306_send_data(&ssd);
 }
 
+// Função para configurar o PIO (Programmable I/O)
+uint pio_config(PIO pio) 
+{
+    set_sys_clock_khz(128000, false); // Configura o clock do sistema para 128 MHz
+
+    // Adiciona o programa PIO para controle da matriz de LEDs
+    uint offset = pio_add_program(pio, &pio_matrix_program);
+
+    // Obtém uma state machine (máquina de estados) não utilizada
+    uint sm = pio_claim_unused_sm(pio, true);
+
+    // Inicializa o programa PIO na state machine com o pino de saída definido
+    pio_matrix_program_init(pio, sm, offset, OUT_PIN);
+
+    return sm; // Retorna a state machine configurada
+}
+
+
 int main()
 {
     stdio_init_all();
     setup_i2c();
     setup_display();
+
+    pio = pio0;
+    sm = pio_config(pio);
 
     uint8_t x = 0;
     uint8_t y = 0;
@@ -71,6 +99,8 @@ int main()
 
                 last_char_time = now;
                 printf("Displayed: %c em (%d,%d)\n", c, x, y);
+
+                main_animacao((c-'0'), pio, sm);
             }
         }
 

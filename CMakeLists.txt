@@ -37,7 +37,8 @@ pico_sdk_init()
 
 add_executable(ComunicacaoSerial 
     ComunicacaoSerial.c
-    ${CMAKE_CURRENT_LIST_DIR}/libs/display/display.c)
+    ${CMAKE_CURRENT_LIST_DIR}/libs/display/display.c
+    ${CMAKE_CURRENT_LIST_DIR}/libs/matriz_led/matriz_led.c)
 
 pico_set_program_name(ComunicacaoSerial "ComunicacaoSerial")
 pico_set_program_version(ComunicacaoSerial "0.1")
@@ -48,12 +49,16 @@ pico_enable_stdio_usb(ComunicacaoSerial 1)
 
 # Add the standard library to the build
 target_link_libraries(ComunicacaoSerial
-        pico_stdlib)
+        pico_stdlib
+        hardware_pio
+        hardware_adc)
 
 # Add the standard include files to the build
 target_include_directories(ComunicacaoSerial PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/include)
+
+pico_generate_pio_header(ComunicacaoSerial ${CMAKE_CURRENT_LIST_DIR}/pio_matrix.pio)
 
 # Add any user requested libraries
 target_link_libraries(ComunicacaoSerial 
