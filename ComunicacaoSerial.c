@@ -31,31 +31,6 @@ void setup_display()
     ssd1306_send_data(&ssd);
 }
 
-// int main()
-// {
-//     stdio_init_all(); // Inicializa stdio via USB/UART
-//     setup_i2c();
-//     setup_display();
-
-//     printf("Display ready! Type characters...\n");
-    
-//     while(true) {
-//         // Verifica entrada sem bloquear
-//         int c = getchar_timeout_us(0);
-        
-//         if(c != PICO_ERROR_TIMEOUT) {
-//             // Limpa display e exibe novo caractere
-//             ssd1306_fill(&ssd, false);
-//             ssd1306_draw_char(&ssd, (char)c, 0, 0);
-//             ssd1306_send_data(&ssd);
-            
-//             // Ecoa o caractere de volta (opcional)
-//             printf("Displayed: %c\n", c);
-//         }
-//         sleep_ms(10);
-//     }
-// }
-
 int main()
 {
     stdio_init_all();
@@ -66,32 +41,39 @@ int main()
     uint8_t y = 0;
     
     printf("Display pronto! Digite algo...\n");
+
+    absolute_time_t last_char_time = get_absolute_time();  // AQUI
     
     while(true) {
         int c = getchar_timeout_us(0);
         
         if(c != PICO_ERROR_TIMEOUT) {
-            // Desenha o novo caractere na posição atual
-            ssd1306_draw_char(&ssd, (char)c, x, y);
-            ssd1306_send_data(&ssd);
-            
-            // Atualiza a posição para o próximo caractere
-            x += 8;
-            
-            // Quebra de linha
-            if(x + 8 >= ssd.width) {
-                x = 0;
-                y += 8;
-                
-                // Reset ao chegar no final do display
-                if(y + 8 >= ssd.height) {
-                    y = 0;
-                    ssd1306_fill(&ssd, false); // Limpa ao chegar no final
+
+            absolute_time_t now = get_absolute_time();  // AQUI
+
+            // Aplica debounce temporal para evitar leituras muito próximas
+            if(absolute_time_diff_us(last_char_time, now) > 50*1000) 
+            {
+                // Desenha o caractere no display
+                ssd1306_draw_char(&ssd, (char)c, x, y);
+                ssd1306_send_data(&ssd);
+
+                // Atualiza a posição para o próximo caractere
+                x += 8;
+                if(x + 8 >= ssd.width) {
+                    x = 0;
+                    y += 8;
+                    if(y + 8 >= ssd.height) {
+                        y = 0;
+                        ssd1306_fill(&ssd, false);
+                    }
                 }
+
+                last_char_time = now;
+                printf("Displayed: %c em (%d,%d)\n", c, x, y);
             }
-            
-            printf("Displayed: %c em (%d,%d)\n", c, x, y);
         }
+
         sleep_ms(10);
     }
 }
