@@ -8,13 +8,86 @@
 #define SCL_PIN 15          // GPIO15 para SCL
 #define SSD1306_ADDR 0x3C   // Endereço I²C do display (alternativo: 0x3C)
 
-#define OUT_PIN 7
+#define OUT_PIN 7 // Pino PIO
+
+#define BUTTON_A 5 // Define os pinos dos botões A e B
+#define BUTTON_B 6 // Define os pinos dos botões A e B
+#define OUT_PIN_GREEN 12
+#define OUT_PIN_BLUE 13 
+
+static volatile uint32_t last_time = 0; // Armazena o último tempo de interrupção
 
 // Variáveis para o PIO (Programmable I/O) e state machine (máquina de estados)
 PIO pio;
 uint sm;
 
 ssd1306_t ssd; // Inicializa a estrutura do display
+
+void gpio_irq_handler(uint gpio, uint32_t events)
+{
+    uint32_t current_time = to_us_since_boot(get_absolute_time()); // Obtém o tempo atual em microssegundos
+    ssd1306_fill(&ssd, false); // Limpa o display
+
+    // Verifica se passaram pelo menos 250ms desde a última interrupção (debouncing)
+    if (current_time - last_time > 250000) // 250 ms para evitar pulos
+    {
+        // Se o botão A foi pressionado e 'a' é menor que 9, incrementa 'a'
+        if (gpio == BUTTON_A) {
+            if (!gpio_get(OUT_PIN_GREEN)) 
+            {
+                printf("Led verde aceso.\n");
+                ssd1306_draw_string(&ssd, "Led verde aceso\n", 20, 30); // Desenha uma string
+            }
+            else 
+            {
+                printf("Led verde desligado.\n");
+                ssd1306_draw_string(&ssd, "Led verde desligado\n", 20, 30); // Desenha uma string
+            }
+            gpio_put(OUT_PIN_GREEN, !gpio_get(OUT_PIN_GREEN));
+        }
+        else if (gpio == BUTTON_B) {
+            if (!gpio_get(OUT_PIN_BLUE)) 
+            {
+                printf("Led azul aceso.\n");
+                ssd1306_draw_string(&ssd, "Led azul aceso\n", 20, 30); // Desenha uma string
+            }
+            else 
+            {
+                printf("Led azul desligado.\n");
+                ssd1306_draw_string(&ssd, "Led azul desligado\n", 20, 30); // Desenha uma string
+            }
+            gpio_put(OUT_PIN_BLUE, !gpio_get(OUT_PIN_BLUE));
+        }
+
+        // Atualiza o último tempo de interrupção
+        last_time = current_time;
+    }
+}
+
+// Função para configurar os pinos
+void pinos_config() 
+{
+    // Configura o pino do botão A como entrada com pull-up
+    gpio_init(BUTTON_A);
+    gpio_set_dir(BUTTON_A, GPIO_IN);
+    gpio_pull_up(BUTTON_A);
+
+    // Configura o pino do botão B como entrada com pull-up
+    gpio_init(BUTTON_B);
+    gpio_set_dir(BUTTON_B, GPIO_IN);
+    gpio_pull_up(BUTTON_B);
+
+    // Configura o pino do LED vermelho como saída
+    gpio_init(OUT_PIN_GREEN);
+    gpio_set_dir(OUT_PIN_GREEN, GPIO_OUT);
+
+    gpio_init(OUT_PIN_BLUE);
+    gpio_set_dir(OUT_PIN_BLUE, GPIO_OUT);
+
+    // Habilita a interrupção para os botões A e B na borda de descida (quando o botão é pressionado)
+    gpio_set_irq_enabled_with_callback(BUTTON_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
+    gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
+}
 
 void setup_i2c() 
 {
@@ -55,12 +128,12 @@ uint pio_config(PIO pio)
     return sm; // Retorna a state machine configurada
 }
 
-
 int main()
 {
     stdio_init_all();
     setup_i2c();
     setup_display();
+    pinos_config();
 
     pio = pio0;
     sm = pio_config(pio);
