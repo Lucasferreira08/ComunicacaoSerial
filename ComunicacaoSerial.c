@@ -38,12 +38,12 @@ void gpio_irq_handler(uint gpio, uint32_t events)
             if (!gpio_get(OUT_PIN_GREEN)) 
             {
                 printf("Led verde aceso.\n");
-                ssd1306_draw_string(&ssd, "Led verde aceso\n", 20, 30); // Desenha uma string
+                ssd1306_draw_string(&ssd, "Led verde aceso\n", 0, 0); // Desenha uma string
             }
             else 
             {
                 printf("Led verde desligado.\n");
-                ssd1306_draw_string(&ssd, "Led verde desligado\n", 20, 30); // Desenha uma string
+                ssd1306_draw_string(&ssd, "Led verde desligado\n", 0, 0); // Desenha uma string
             }
             gpio_put(OUT_PIN_GREEN, !gpio_get(OUT_PIN_GREEN));
         }
@@ -51,12 +51,12 @@ void gpio_irq_handler(uint gpio, uint32_t events)
             if (!gpio_get(OUT_PIN_BLUE)) 
             {
                 printf("Led azul aceso.\n");
-                ssd1306_draw_string(&ssd, "Led azul aceso\n", 20, 30); // Desenha uma string
+                ssd1306_draw_string(&ssd, "Led azul aceso\n", 0, 0); // Desenha uma string
             }
             else 
             {
                 printf("Led azul desligado.\n");
-                ssd1306_draw_string(&ssd, "Led azul desligado\n", 20, 30); // Desenha uma string
+                ssd1306_draw_string(&ssd, "Led azul desligado\n", 0, 0); // Desenha uma string
             }
             gpio_put(OUT_PIN_BLUE, !gpio_get(OUT_PIN_BLUE));
         }
