@@ -12,7 +12,7 @@
 
 #define BUTTON_A 5 // Define os pinos dos botões A e B
 #define BUTTON_B 6 // Define os pinos dos botões A e B
-#define OUT_PIN_GREEN 13
+#define OUT_PIN_GREEN 11
 #define OUT_PIN_BLUE 12 
 
 static volatile uint32_t last_time = 0; // Armazena o último tempo de interrupção
